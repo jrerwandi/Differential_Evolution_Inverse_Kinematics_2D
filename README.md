@@ -1,0 +1,2 @@
+# Differential_Evolution_Inverse_Kinematics_2D
+solusi inverse kinematics 2 dimensi menggunakan metode optimasi differential evolution
