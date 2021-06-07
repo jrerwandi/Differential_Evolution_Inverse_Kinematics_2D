@@ -149,10 +149,8 @@ def main():
     # Plot Link
     for i in range(len(link)):
         start_point = P[i]
-        #print(start_point)
         end_point = P[i+1]
         ax.plot([start_point[0,3], end_point[0,3]], [start_point[1,3], end_point[1,3]], linewidth=5)
-        # draw_axis(ax, scale=5, A=P[i+1], draw_2d=True)
     
     plt.show()
 
