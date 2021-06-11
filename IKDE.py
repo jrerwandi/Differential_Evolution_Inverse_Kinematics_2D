@@ -116,7 +116,7 @@ def DE(target, angle, link, n_params,Cr=0.5, F=0.5, NP=10, max_gen=300):
             ax.set_ylim(-150, 150)
             plt.scatter(target[0], target[1], marker='x', color = 'black')
 
-        plt.pause(0.05)#plt.ion()
+        plt.pause(0.01)#plt.ion()
         
        
     return best_fitness, angle
@@ -129,7 +129,7 @@ def onclick(event):
     
     limits = 4
     # Inverse Kinematics
-    err, angle = DE(target, angle, link, limits, max_gen= 100)
+    err, angle = DE(target, angle, link, limits, max_gen= 200)
     
     
     P = FK(angle, link)
