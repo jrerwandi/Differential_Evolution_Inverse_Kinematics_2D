@@ -12,6 +12,8 @@ target = [0, 0, 0]
 fig = plt.figure() 
 ax = fig.add_subplot(1,1,1)
 
+ax.set_xlim(-150, 150)
+ax.set_ylim(-150, 150)
 
 # Draw Axis
 def draw_axis(ax, scale=1.0, A=np.eye(4), style='-', draw_2d = False):
@@ -102,9 +104,20 @@ def DE(target, angle, link, n_params,Cr=0.5, F=0.5, NP=10, max_gen=300):
             else:
                 best_fitness = target_fitness
                 angle = e
+         
         print("Best fitness :", best_fitness)
+        P = FK(angle, link)
+        plt.cla()
+        for i in range(len(link)):
+            start_point = P[i]
+            end_point = P[i+1]
+            ax.plot([start_point[0,3], end_point[0,3]], [start_point[1,3], end_point[1,3]], linewidth=5)
+            ax.set_xlim(-150, 150)
+            ax.set_ylim(-150, 150)
+            plt.scatter(target[0], target[1], marker='x', color = 'black')
+
+        plt.pause(0.05)#plt.ion()
         
-    
        
     return best_fitness, angle
 def onclick(event):
@@ -112,20 +125,14 @@ def onclick(event):
     target[0] = event.xdata
     target[1] = event.ydata
     print("Target Position : ", target)
-    plt.cla()
-    ax.set_xlim(-150, 150)
-    ax.set_ylim(-150, 150)
-
+   # plt.cla()
+    
     limits = 4
     # Inverse Kinematics
-    err, angle = DE(target, angle, link, limits, max_gen= 200)
+    err, angle = DE(target, angle, link, limits, max_gen= 100)
+    
     
     P = FK(angle, link)
-    for i in range(len(link)):
-        start_point = P[i]
-        end_point = P[i+1]
-        ax.plot([start_point[0,3], end_point[0,3]], [start_point[1,3], end_point[1,3]], linewidth=5)
-        draw_axis(ax, scale=10, A=P[i+1], draw_2d=True)
     
     if (err > 1): 
        print("IK Error")
@@ -136,14 +143,13 @@ def onclick(event):
     print("Target :", target)
     print("End Effector :", P[-1][:3, 3])
     print("Error :", err)
-    plt.show()
+   # plt.show()
 
 def main():
     fig.canvas.mpl_connect('button_press_event', onclick)
     fig.suptitle("Differential Evolution - Inverse Kinematics", fontsize=12)
     ax.set_xlim(-150, 150)
     ax.set_ylim(-150, 150)
-
     # Forward Kinematics
     P = FK(angle, link)
     # Plot Link
