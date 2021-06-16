@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt 
 import math
+from pid import *
+
 
 # Robot Link Length Parameter
 link = [20, 30, 40, 40]
@@ -9,11 +11,14 @@ angle = [0, 0, 0, 0]
 # Target End of Effector Position
 target = [0, 0, 0] 
 # Create figure to plot
-fig = plt.figure() 
+fig = plt.figure(1) 
 ax = fig.add_subplot(1,1,1)
+#ax2 = fig2.add_subplot(1,1,1)
 
 ax.set_xlim(-150, 150)
 ax.set_ylim(-150, 150)
+
+fig2, ax2 = plt.subplots(2, 2)
 
 # Draw Axis
 def draw_axis(ax, scale=1.0, A=np.eye(4), style='-', draw_2d = False):
@@ -106,8 +111,8 @@ def DE(target, angle, link, n_params,Cr=0.5, F=0.5, NP=10, max_gen=300):
                 angle = e
          
         print("Best fitness :", best_fitness)
+        '''
         P = FK(angle, link)
-        plt.cla()
         for i in range(len(link)):
             start_point = P[i]
             end_point = P[i+1]
@@ -117,10 +122,12 @@ def DE(target, angle, link, n_params,Cr=0.5, F=0.5, NP=10, max_gen=300):
             plt.scatter(target[0], target[1], marker='x', color = 'black')
 
         plt.pause(0.01)#plt.ion()
-        
+        plt.cla()
+        '''
        
     return best_fitness, angle
 def onclick(event):
+    fig2.suptitle("PID", fontsize=12)
     global target, link, angle, ax
     target[0] = event.xdata
     target[1] = event.ydata
@@ -132,22 +139,118 @@ def onclick(event):
     err, angle = DE(target, angle, link, limits, max_gen= 200)
     
     
+    ####pid
+    
+    kp = 0.4
+    ki = 0.8
+    kd = 0.05
+    x = []
+    y1 = [0]
+    y2 = [0]
+    y3 = [0]
+    y4 = [0]
+    y5 = [0]
+    y6 = [0]
+    y7 = [0]
+    y8 = [0]
+    y1.pop()
+    y2.pop()
+    y3.pop()
+    y4.pop()
+    y5.pop()
+    y6.pop()
+    y7.pop()
+    y8.pop()
+    
+    
+    pid1 = PID(kp, ki, kd)  # default sample time : 10ms
+    pid2 = PID(kp, ki, kd)  # default sample time : 10ms
+    pid3 = PID(kp, ki, kd)  # default sample time : 10ms
+    pid4 = PID(kp, ki, kd)  # default sample time : 10ms
+
+    for point_num in range(30): #baru 1 joint
+        t = point_num * pid1.sample_time
+        set_line = angle[0]
+        set_line2 = angle[1]
+        set_line3 = angle[2]
+        set_line4 = angle[3]
+        
+        output_line = pid1.update(set_line)
+        output_line2 = pid2.update(set_line2)
+        output_line3 = pid3.update(set_line3)
+        output_line4 = pid4.update(set_line4)
+
+        x.append(t)
+        y1.append(set_line)
+        y2.append(output_line)
+
+        y3.append(set_line2)
+        y4.append(output_line2)
+
+        y5.append(set_line3)
+        y6.append(output_line3)
+
+        y7.append(set_line4)
+        y8.append(output_line4)
+
+#        print("a",output_line)
+        ax2[0, 0].plot(x, y1, 'b--', x, y2, 'r')
+        ax2[0, 0].set_title('joint 1')
+        
+        ax2[0, 1].plot(x, y3, 'b--', x, y4, 'r')
+        ax2[0, 1].set_title('joint 2')
+        
+        ax2[1, 0].plot(x, y5, 'b--', x, y6, 'r')
+        ax2[1, 0].set_title('joint 3')
+        
+        ax2[1, 1].plot(x, y7, 'b--', x, y8, 'r')
+        ax2[1, 1].set_title('joint 4')
+        
+        angle2 = [output_line,output_line2,output_line3,output_line4]
+        P = FK(angle2, link)
+        for i in range(len(link)):
+            start_point = P[i]
+            end_point = P[i+1]
+            ax.plot([start_point[0,3], end_point[0,3]], [start_point[1,3], end_point[1,3]], linewidth=5)
+            ax.set_xlim(-150, 150)
+            ax.set_ylim(-150, 150)
+            ax.scatter(target[0], target[1], marker='x', color = 'black')
+
+
+        for axs in ax2.flat:
+            axs.set(xlabel='x-label', ylabel='y-label')
+            
+        plt.pause(0.01)#plt.ion()
+        plt.cla()
+        
     P = FK(angle, link)
+
+    for i in range(len(link)):
+        start_point = P[i]
+        end_point = P[i+1]
+        ax.plot([start_point[0,3], end_point[0,3]], [start_point[1,3], end_point[1,3]], linewidth=5)
+        ax.set_xlim(-150, 150)
+        ax.set_ylim(-150, 150)
+        ax.scatter(target[0], target[1], marker='x', color = 'black')
+    
     
     if (err > 1): 
        print("IK Error")
     else:
        print("IK Solved")
        
-    print("Angle :", angle) 
-    print("Target :", target)
-    print("End Effector :", P[-1][:3, 3])
-    print("Error :", err)
-   # plt.show()
+#    print("Angle :", angle) 
+#    print("Target :", target)
+#    print("End Effector :", P[-1][:3, 3])
+#    print("Error :", err)
+    fig.show()
+    
+    fig2.show()
 
 def main():
     fig.canvas.mpl_connect('button_press_event', onclick)
     fig.suptitle("Differential Evolution - Inverse Kinematics", fontsize=12)
+    fig2.suptitle("PID", fontsize=12)
     ax.set_xlim(-150, 150)
     ax.set_ylim(-150, 150)
     # Forward Kinematics
